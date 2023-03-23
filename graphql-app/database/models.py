@@ -3,7 +3,7 @@ from sqlalchemy import *
 from sqlalchemy.orm import (scoped_session, sessionmaker, relationship)
 from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine('postgresql://postgres:postgres@localhost:5432/AtomCorp')
+engine = create_engine('postgresql://postgres:postgres@localhost:5431/AtomCorp')
 engine.connect()
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
