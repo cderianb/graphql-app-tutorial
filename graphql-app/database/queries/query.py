@@ -2,36 +2,45 @@ import graphene
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField
 from database.models import db_session
-from database.schema import Employee, Department, EmployeeInformation, Project, EmployeeProjectMapping, DepartmentModel, EmployeeModel
+from database.entity import Employee, Department, EmployeeInformation, Project, EmployeeProjectMapping, DepartmentModel, EmployeeModel
 from database.mutations.mutation import Mutation
+from database.queries.employee_queries import GetEmployees
 
 class DepartmentEmployee(graphene.ObjectType):
     department_name = graphene.String()
     employees = graphene.List(Employee)
 
 class Query(graphene.ObjectType):
-    node = relay.Node.Field()
-    # Allows sorting over multiple columns, by default over the primary key
-    all_employees = SQLAlchemyConnectionField(Employee.connection)
-    # Disable sorting over this field
-    all_departments = SQLAlchemyConnectionField(Department.connection, sort=None)
-    all_employee_informations = SQLAlchemyConnectionField(EmployeeInformation.connection, sort=None)
-    all_projects = SQLAlchemyConnectionField(Project.connection, sort=None)
-    all_employee_project_mapping = SQLAlchemyConnectionField(EmployeeProjectMapping.connection, sort=None)
+    departments = graphene.List(Department, name = graphene.String(required=False))
+    def resolve_departments(self, info, name=''):
+        query = Department.get_query(info)
 
-    #filter query
-    find_department = graphene.List(Department, name = graphene.String())
-    def resolve_find_department(self, info, name):
-        department = Department.get_query(info)\
-                                .filter(DepartmentModel.name == name)
-        return department
+        if name != '':
+            query = query.filter(DepartmentModel.name == name)
+
+        return query
+
+    employees = graphene.List(Employee, name=graphene.String(required=False))
+    def resolve_employees(self, info, name=''):
+        query = Employee.get_query(info)
+
+        if name != '':
+            like_query = '%{0}%'.format(name)
+            query = query.filter(EmployeeModel.name.ilike(like_query))
+
+        return query
     
-    find_employee = graphene.List(Employee, name = graphene.String())
-    def resolve_find_employee(self, info, name):
-        like_query = '%{0}%'.format(name)
-        employee = (Employee.get_query(info)
-                    .filter(EmployeeModel.name.ilike(like_query)))
+    employee_informations = graphene.List(EmployeeInformation)
+    def resolve_employee_informations(self, info):
+        query = EmployeeInformation.get_query(info)
+        return query
 
-        return employee       
-
-schema = graphene.Schema(query=Query, mutation=Mutation)
+    projects = graphene.List(Project)
+    def resolve_projects(self, info):
+        query = Project.get_query(info)
+        return query
+    
+    employee_project_mapping = graphene.List(EmployeeProjectMapping)
+    def resolve_employee_project_mapping(self, info):
+        query = EmployeeProjectMapping.get_query(info)
+        return query

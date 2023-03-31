@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS, cross_origin
 from flask_graphql import GraphQLView
 from database.models import db_session
-from database.queries.query import schema
+from database.schema import schema
 from flask import request
 
 app = Flask(__name__)
